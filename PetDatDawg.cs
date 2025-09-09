@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Linq;
 using BepInEx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,12 +20,18 @@ public sealed class PetDatDawg: BaseUnityPlugin {
     public const float INTERACTION_COLLIDER_WIDTH = INTERACTION_COLLIDER_HEIGHT / 2;
 
     private void Awake() {
-        SceneManager.activeSceneChanged += SceneChanged;
+        SceneManager.sceneLoaded += SceneLoaded;
+        Logger.LogInfo($"{nameof(PetDatDawg)} v{typeof(PetDatDawg).Assembly.GetName().Version} loaded!");
     }
 
-    private void SceneChanged(Scene oldScene, Scene newScene) {
-        if (newScene.GetRootGameObjects().FirstOrDefault(x => x.name == BELL_BEAST_GO_NAME) is not { } dawg)
-            return;
+    private void SceneLoaded(Scene scene, LoadSceneMode mode) {
+        var roots = scene.GetRootGameObjects();
+        GameObject? dawg;
+        if ((dawg = roots.FirstOrDefault(static x => x.name == BELL_BEAST_GO_NAME)) is null) {
+            if ((dawg = roots.Select(static x => x.transform.Find(BELL_BEAST_GO_NAME)).FirstOrDefault(static x => x != null)?.gameObject) is null) {
+                return;
+            }
+        }
 
         var go = new GameObject(PET_NPC_GO_NAME, typeof(PlayMakerNPC), typeof(BoxCollider2D));
         go.SetActive(dawg.activeSelf);
@@ -82,13 +87,13 @@ public sealed class PetDatDawg: BaseUnityPlugin {
             .FirstOrDefault(x => x.FsmName == BELL_BEAST_FSM_NAME);
         if (fsm == null) {
             Logger.LogWarning($"No {nameof(PlayMakerFSM)} with name {BELL_BEAST_FSM_NAME} on dawg GO");
-            return; // grumble is not vital, continue if we can
+            return; // rumble is not vital, continue if we can
         }
 
         fsm.SetState(BELL_BEAST_SHAKE_STATE_NAME);
     }
 
     private void OnDestroy() {
-        SceneManager.activeSceneChanged -= SceneChanged;
+        SceneManager.sceneLoaded -= SceneLoaded;
     }
 }
