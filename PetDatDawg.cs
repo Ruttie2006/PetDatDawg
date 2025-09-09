@@ -21,7 +21,6 @@ public sealed class PetDatDawg: BaseUnityPlugin {
 
     private void Awake() {
         SceneManager.sceneLoaded += SceneLoaded;
-        Logger.LogInfo($"{nameof(PetDatDawg)} v{typeof(PetDatDawg).Assembly.GetName().Version} loaded!");
     }
 
     private void SceneLoaded(Scene scene, LoadSceneMode mode) {
